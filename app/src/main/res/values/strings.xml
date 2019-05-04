@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">OneFromTen</string>
+    <!--      MAIN    SCREEEN     -->
+    <string name="solo_game">Solo game</string>
+    <string name="three_men_game">Three men</string>
+    <string name="ten_men_game">Ten men</string>
+    <!--         SETTINGS         -->
+    <string name="volume_up">Volume up</string>
+    <string name="volume_down">Volume down</string>
+    <!--        Solo game         -->
+    <string name="game_over">Game over!</string>
+
+
+</resources>

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "842806812858",
+    "firebase_url": "https://onefromten-2e58f.firebaseio.com",
+    "project_id": "onefromten-2e58f",
+    "storage_bucket": "onefromten-2e58f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842806812858:android:96751e3f815a45df",
+        "android_client_info": {
+          "package_name": "com.example.kuba.onefromten"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "842806812858-dm8u0qvfbh3csj2prmobf1jmcfck9r5c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kuba.onefromten",
+            "certificate_hash": "d5351ccfa7efc0e4914062e2a5c68d440d451c99"
+          }
+        },
+        {
+          "client_id": "842806812858-atut558hd8s7q5ecn8msmnfo6hml4vu1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD32g2cMq28ITLUYmWZOpwNjdJTy9fR-Mw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "842806812858-atut558hd8s7q5ecn8msmnfo6hml4vu1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
