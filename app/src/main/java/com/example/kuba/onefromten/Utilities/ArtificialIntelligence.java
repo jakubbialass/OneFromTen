@@ -1,7 +1,10 @@
 package com.example.kuba.onefromten.Utilities;
 
+import android.app.Activity;
 import android.util.Log;
+import android.widget.TextView;
 
+import com.example.kuba.onefromten.Fragments.ThreeMenGame;
 import com.example.kuba.onefromten.Question;
 
 import java.util.ArrayList;
@@ -23,16 +26,22 @@ public class ArtificialIntelligence extends Thread {
     private ArrayList<String> playersList;
     private String pointedAt;
     private boolean pointing;
+    private Activity myActivity;
+    private TextView[] playerTextView;
+    private boolean lastQuestion;
+    private boolean gameOver;
 
 
 
 
-    public ArtificialIntelligence(String name, Difficulty difficulty, ArrayList<String> playersList){
+    public ArtificialIntelligence(String name, Difficulty difficulty, ArrayList<String> playersList, Activity myActivity, TextView[] playerTextView){
 
         this.name = name;
         this.difficulty = difficulty;
         this.playersList = playersList;
-
+        this.myActivity = myActivity;
+        this.playerTextView = playerTextView;
+        initializePlayerTextViews();
         this.answer = "";
         this.isMyTurn = false;
         this.lives = 3;
@@ -40,33 +49,42 @@ public class ArtificialIntelligence extends Thread {
         this.score = 0;
         this.pointing = false;
         this.pointedAt = null;
+        this.gameOver = false;
+
     }
 
 
     public void run(){
         try{
-            while(lives >0){
+            changeText(playerTextView[0], name);
+            while(lives >0 && !gameOver){
 
                 if(canAnswer) {
-                    Log.v("-----jestemai " + name, " is my turn? " + isMyTurn);
+                    if (lastQuestion) {
+                        gameOver = true;
+                        Log.v("ajajajaj ", "zakonczylem");
+                    }
+                    Log.v("ajajajaj", name + " is my turn? " + isMyTurn);
+                    Log.v("ajajajaj", name + " bedzie odpowiadal");
                     answerTheQuestion(currentQuestion);
+                    Log.v("ajajajaj", name + " odpowiadal");
 
                     if (currentQuestion.isCorrectAnswer(answer)){
                         score++;
-
-                        if (isMyTurn) {
+                        Log.v("ajajajaj ", "isMyTurn " + isMyTurn + "; isLastQuestion " + lastQuestion + "; isCanAnswer " + canAnswer);
+                        if (isMyTurn && !lastQuestion) {
+                            changeText(playerTextView[2], "pointing");
                             Thread.sleep(2000);
                             pointedAt = pointSomeoneToAnswer();
+                            Log.v("ajajajaj ", "pointedAt " + pointedAt);
                         }
-                        //pointing = false;
-                        //canAnswer = false;
-
+                        Log.v("ajajajaj ", name + " last prostaaa isCanAnswer " + canAnswer);
                     }
                     pointing = false;
+
                 }
 
             }
-
         } catch (Exception e){}
     }
 
@@ -78,24 +96,33 @@ public class ArtificialIntelligence extends Thread {
         boolean isCorrectAnswer = false;
         int drawnNumber = generator.nextInt(10) +1;
         try {
-
+            if(isMyTurn)
+                changeText(playerTextView[2], "answering");
+            else
+                changeText(playerTextView[2], "playing");
             if (difficulty == Difficulty.EASY) {
                 int timeForAnswerInSeconds = generator.nextInt(10) +3;
+                if (lastQuestion)
+                    timeForAnswerInSeconds = 4;
                 if(isMyTurn)
                     Thread.sleep(timeForAnswerInSeconds*1000);
                 if(drawnNumber > 7)
                     isCorrectAnswer = true;
             } else if (difficulty == Difficulty.MEDIUM) {
                 int timeForAnswerInSeconds = generator.nextInt(10) +2;
+                if (lastQuestion)
+                    timeForAnswerInSeconds = 4;
                 if(isMyTurn)
                     Thread.sleep(timeForAnswerInSeconds*1000);
                 if(drawnNumber > 5)
                     isCorrectAnswer = true;
             } else {
                 int timeForAnswerInSeconds = generator.nextInt(10) +1;
+                if (lastQuestion)
+                    timeForAnswerInSeconds = 4;
                 if(isMyTurn)
                     Thread.sleep(timeForAnswerInSeconds*1000);
-                if(drawnNumber > 3)
+                if(drawnNumber >= 0)
                     isCorrectAnswer = true;
             }
             if(isCorrectAnswer) {
@@ -108,8 +135,10 @@ public class ArtificialIntelligence extends Thread {
             else {
                 answer = question.getWrongAnswer();
                 isMyTurn = false;
+                changeText(playerTextView[2], "playing");
             }
             Log.v("-----jestemai " + name, " odpowiedz jest " + String.valueOf(isCorrectAnswer) + ", is my turn? " + isMyTurn);
+            Log.v("ajajajaj ", "buuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
             pointedAt = null;
             canAnswer = false;
             Thread.sleep(500);
@@ -123,10 +152,15 @@ public class ArtificialIntelligence extends Thread {
 
     private String pointSomeoneToAnswer(){
         Random generator = new Random();
-        String playername = playersList.get(generator.nextInt(playersList.size()-1));
-        Log.v("-----jestemai", " szmaciura " + name + " wskazala " + playername);
-        if(!playername.equals(name))
-            setMyTurn(false);
+        String playername = playersList.get(generator.nextInt(playersList.size()));
+        Log.v("-----jestemai", " ai " + name + " wskazala " + playername);
+        if(!playername.equals(name)) {
+            changeText(playerTextView[2], "playing");
+        }
+        else
+            changeText(playerTextView[2], "answering");
+        isMyTurn = false;
+        Log.v("ajajajaj ", playername);
         return playername;
     }
 
@@ -183,6 +217,30 @@ public class ArtificialIntelligence extends Thread {
 
     public String getAiName(){
         return name;
+    }
+
+    private void changeText(final TextView textView, final String text){
+        myActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(text);
+            }
+        });
+    }
+
+    private void initializePlayerTextViews(){
+        myActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                playerTextView[0].setText(name);
+                playerTextView[1].setText("0");
+                playerTextView[2].setText("playing");
+            }
+        });
+    }
+
+    public void isLastQuestion(boolean lastQuestion){
+        this.lastQuestion = lastQuestion;
     }
 
 

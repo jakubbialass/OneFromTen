@@ -46,6 +46,7 @@ public class SoloGame extends Fragment {
     OldGameController oldGameController;
     SoloGameController soloGameController;
     private Fragment thisFragment;
+    private TextView timer;
 
 
 
@@ -101,28 +102,28 @@ public class SoloGame extends Fragment {
         answer1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                soloGameController.setAnswer(answer1.getText().toString(), 0);
+                soloGameController.setAnswer(answer1.getText().toString(), 0, true);
             }
         });
         answer2 = view.findViewById(R.id.answer_b_button);
         answer2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                soloGameController.setAnswer(answer2.getText().toString(), 1);
+                soloGameController.setAnswer(answer2.getText().toString(), 1, true);
             }
         });
         answer3 = view.findViewById(R.id.answer_c_button);
         answer3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                soloGameController.setAnswer(answer3.getText().toString(), 2);
+                soloGameController.setAnswer(answer3.getText().toString(), 2, true);
             }
         });
         answer4 = view.findViewById(R.id.answer_d_button);
         answer4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                soloGameController.setAnswer(answer4.getText().toString(), 3);
+                soloGameController.setAnswer(answer4.getText().toString(), 3, true);
             }
         });
         buttons = new Button[4];
@@ -157,6 +158,8 @@ public class SoloGame extends Fragment {
                 replaceFragment(newGame, "Solo");
             }
         });
+
+        timer = view.findViewById(R.id.seconds_left);
 
 
 
@@ -196,7 +199,7 @@ public class SoloGame extends Fragment {
                 }
                 //oldGameController = new OldGameController(getContext(), questions, buttons, questionTextView, gameOverLinearLayout, getActivity());
                 //oldGameController.start();
-                soloGameController = new SoloGameController(getContext(), questions, buttons, questionTextView, gameOverLinearLayout, getActivity());
+                soloGameController = new SoloGameController(getContext(), questions, buttons, questionTextView, gameOverLinearLayout, getActivity(), timer);
                 soloGameController.start();
             }
 

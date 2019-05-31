@@ -1,6 +1,7 @@
 package com.example.kuba.onefromten.Fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,10 +40,13 @@ public class ThreeMenGame extends Fragment {
     private Button mainMenuButton, playAgainButton;
     private Button answer1, answer2, answer3, answer4;
     private Button[] buttons, playersButtons;
+    private TextView[][] playersTextViews;
     private LinearLayout gameOverLinearLayout;
     private ThreeMenGameController threeMenGameController;
+    private TextView timer;
+    private TextView narrator;
 
-    private static final int QUESTIONS_QUANTITY_THIS_MODE = 6;
+    private static final int QUESTIONS_QUANTITY_THIS_MODE = 8;
 
 
     @Nullable
@@ -55,13 +59,17 @@ public class ThreeMenGame extends Fragment {
 
         initialize(view);
 
-        getQuestions(QUESTIONS_QUANTITY_THIS_MODE);
+        getQuestions(QUESTIONS_QUANTITY_THIS_MODE, view);
 
 
         return view;
     }
 
 
+
+    public ThreeMenGame(){
+
+    }
 
 
 
@@ -73,28 +81,28 @@ public class ThreeMenGame extends Fragment {
         answer1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                threeMenGameController.setAnswer(answer1.getText().toString(), 0);
+                threeMenGameController.setAnswer(answer1.getText().toString(), 0, threeMenGameController.isMyTurn());
             }
         });
         answer2 = view.findViewById(R.id.answer_b_button);
         answer2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                threeMenGameController.setAnswer(answer2.getText().toString(), 1);
+                threeMenGameController.setAnswer(answer2.getText().toString(), 1, threeMenGameController.isMyTurn());
             }
         });
         answer3 = view.findViewById(R.id.answer_c_button);
         answer3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                threeMenGameController.setAnswer(answer3.getText().toString(), 2);
+                threeMenGameController.setAnswer(answer3.getText().toString(), 2, threeMenGameController.isMyTurn());
             }
         });
         answer4 = view.findViewById(R.id.answer_d_button);
         answer4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                threeMenGameController.setAnswer(answer4.getText().toString(), 3);
+                threeMenGameController.setAnswer(answer4.getText().toString(), 3, threeMenGameController.isMyTurn());
             }
         });
         buttons = new Button[4];
@@ -124,8 +132,10 @@ public class ThreeMenGame extends Fragment {
                 threeMenGameController.pointedAt(2);
             }
         });
+        timer = view.findViewById(R.id.seconds_left);
 
 
+        narrator = view.findViewById(R.id.narrator);
 
 
         for(int i=0; i<4; i++) {
@@ -152,26 +162,38 @@ public class ThreeMenGame extends Fragment {
             @Override
             public void onClick(View view) {
                 gameOverLinearLayout.setVisibility(View.GONE);
-                Fragment newGame = new SoloGame();
+                Fragment newGame = new ThreeMenGame();
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 //fragmentManager.popBackStack();
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                fragmentTransaction.replace(R.id.fragment_placeholder_main, newGame, "Solo");
+                fragmentTransaction.replace(R.id.fragment_placeholder_main, newGame, "Three");
                 fragmentTransaction.commit();
             }
         });
 
+        playersTextViews = new TextView[3][3];
+
+       // for(int i=0; i<3; i++){
+        //    playersTextViews[i] = new TextView[3];
+       // }
+        playersTextViews[0][0] = view.findViewById(R.id.player1_name);
+        playersTextViews[0][1] = view.findViewById(R.id.player1_score);
+        playersTextViews[0][2] = view.findViewById(R.id.player1_action);
+
+        playersTextViews[1][0] = view.findViewById(R.id.player2_name);
+        playersTextViews[1][1] = view.findViewById(R.id.player2_score);
+        playersTextViews[1][2] = view.findViewById(R.id.player2_action);
+
+        playersTextViews[2][0] = view.findViewById(R.id.player3_name);
+        playersTextViews[2][1] = view.findViewById(R.id.player3_score);
+        playersTextViews[2][2] = view.findViewById(R.id.player3_action);
 
     }
 
 
-
-
-
-    private void getQuestions(final int questionsQuantity){
+    private void getQuestions(final int questionsQuantity, View view){
         questions.clear();
-        questionTextView.setText("");
-
+        clearText(view);
         mQuestionsReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -188,7 +210,7 @@ public class ThreeMenGame extends Fragment {
                     questions.add(question);
                 }
 
-                threeMenGameController = new ThreeMenGameController(getContext(), questions, buttons, playersButtons, questionTextView, gameOverLinearLayout, getActivity());
+                threeMenGameController = new ThreeMenGameController(getContext(), questions, buttons, playersButtons, questionTextView, gameOverLinearLayout, getActivity(), playersTextViews, timer, narrator);
                 threeMenGameController.start();
             }
 
@@ -199,6 +221,20 @@ public class ThreeMenGame extends Fragment {
         });
     }
 
+
+
+    private void clearText(View view){
+        questionTextView.setText("");
+        for(Button button : buttons){
+            button.setText("");
+        }
+        for(Button button : playersButtons){
+            button.setText("");
+        }
+        timer.setText("");
+        narrator.setText("Ładuję pytania");
+
+    }
 
 
 

@@ -25,9 +25,11 @@ public class GameController extends Thread {
     private String answer;
     private int clickedButtonNumber;
     private Question currentQuestion;
-    private int numberOfCurrentQuestion;
-    private ArrayList<Question> questions;
+    protected int numberOfCurrentQuestion;
+    protected ArrayList<Question> questions;
     private Activity myActivity;
+    private boolean isClickableAnswerButtons;
+
 
     protected boolean isSoundOn;
     protected boolean isQuestionShowed;
@@ -35,6 +37,9 @@ public class GameController extends Thread {
     protected boolean isAnswered;
     protected boolean isTimeOut;
     protected boolean isGameOver;
+    protected boolean clickedWhileNotMyTurn;
+    protected TextView timer;
+    protected boolean lastQuestion;
 
 
 
@@ -48,6 +53,9 @@ public class GameController extends Thread {
         this.answer = "";
         this.isGameOver = false;
         this.numberOfCurrentQuestion = 0;
+        this.isClickableAnswerButtons = true;
+        this.clickedWhileNotMyTurn = false;
+        this.lastQuestion = false;
 
 
     }
@@ -98,7 +106,7 @@ public class GameController extends Thread {
                         } catch (Exception e){}
                     }
                 });
-                //questionTextView.append(String.valueOf(letter));
+
                 if(isSoundOn )
                     soundPool.play(soundId, 1, 1, 0, 0, 1);
                 Thread.sleep(timeForLetter);
@@ -130,7 +138,6 @@ public class GameController extends Thread {
                 for(int i=0; i<4; i++){
                     answerButtons[i].setClickable(true);
                 }
-                //wait();
             }
         } catch (Exception e){}
 
@@ -144,13 +151,26 @@ public class GameController extends Thread {
         try{
             if (isWaitingForAnswer) {
                 int i=0;
+                int secondsLeft = TIME_FOR_ANSWER_IN_SECONDS;
+                myActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        timer.setText(String.valueOf(TIME_FOR_ANSWER_IN_SECONDS));
+                    }
+                });
                 while (!isAnswered && i < TIME_FOR_ANSWER_IN_SECONDS) {
                     Thread.sleep(1000);
+                    secondsLeft--;
                     i++;
+                    final int mSecondsLeft = secondsLeft;
+                    myActivity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() { timer.setText(String.valueOf(mSecondsLeft));
+                        }
+                    });
                 }
                 if(i == TIME_FOR_ANSWER_IN_SECONDS) {
                     isTimeOut = true;
-                    //isAnswered = true;
                 }
                 isAnswered = true;
                 isWaitingForAnswer = false;
@@ -169,7 +189,6 @@ public class GameController extends Thread {
                 for(int i=0; i<4; i++){
                     answerButtons[i].setClickable(false);
                 }
-                //Thread.sleep(CHECKING_ANSWER_TIME);
                 if(isTimeOut)
                     return false;
                 else if(currentQuestion.isCorrectAnswer(answer)){
@@ -186,6 +205,7 @@ public class GameController extends Thread {
 
     protected synchronized void highlightAnsweredButton(){
         try {
+            Log.v("klikowalne", "3");
             if(isTimeOut){
                 for(int i=0; i<4; i++)
                     answerButtons[i].setBackgroundColor(Color.RED);
@@ -203,22 +223,49 @@ public class GameController extends Thread {
                 Thread.sleep(1000);
                 answerButtons[clickedButtonNumber].setBackgroundColor(context.getResources().getColor(R.color.answerButton));
             }
+            clickedWhileNotMyTurn = false;
         } catch (InterruptedException e){}
 
     }
 
+    protected void setButtonsClickable(boolean isClickable, boolean changeColors){
 
-    public void setAnswer(String answerFromUser, int clickedButtonNumber){
+        for(int i=0; i<4; i++)
+            answerButtons[i].setClickable(isClickable);
+        if(changeColors) {
+            for (int i = 0; i < 4; i++) {
+                if (isClickable)
+                    answerButtons[i].setBackgroundColor(context.getResources().getColor(R.color.answerButton));
+                else
+                    answerButtons[i].setBackgroundColor(context.getResources().getColor(R.color.inactiveAnswerButton));
+            }
+        }
+        isClickableAnswerButtons = isClickable;
+
+
+    }
+
+    protected void changeClickedButtonColor(){
+        answerButtons[clickedButtonNumber].setBackgroundColor(context.getResources().getColor(R.color.inactiveAnswerButton));
+    }
+
+
+    public void setAnswer(String answerFromUser, int clickedButtonNumber, boolean isMyTurn){
+        Log.v("klikowalne", "1");
         answer = answerFromUser;
         isAnswered = true;
         this.clickedButtonNumber = clickedButtonNumber;
+        if(!isMyTurn) {
+            Log.v("klikowalne", "2");
+            clickedWhileNotMyTurn = true;
+        }
+        setButtonsClickable(false, false);
+        changeClickedButtonColor();
     }
 
     public void clearText(final TextView questionTextView){
-       //Log.v("Jestemtu", "przed klirowaniem");
         for(int i=0; i<4; i++) {
-            //Log.v("Jestemtu", "panie");
-            answerButtons[i].setText("x");
+            answerButtons[i].setText("");
         }
         myActivity.runOnUiThread(new Runnable() {
             @Override
@@ -228,9 +275,9 @@ public class GameController extends Thread {
                 } catch (Exception e){}
             }
         });
-        //questionTextView.setText("");
-        //Log.v("Jestemtu", "po klirowaniu");
     }
+
+
 
 
     protected String getAnswer(){
@@ -255,10 +302,19 @@ public class GameController extends Thread {
     protected void setNextQuestion(){
         numberOfCurrentQuestion++;
         currentQuestion = questions.get(numberOfCurrentQuestion);
+        Log.v("ajajajaj ", "size " + String.valueOf(questions.size()));
+        if(numberOfCurrentQuestion == questions.size()-1)
+            lastQuestion = true;
     }
 
     protected Question getCurrentQuestion(){
         return currentQuestion;
     }
+
+    protected boolean isClickableAnswerButtons(){
+        return isClickableAnswerButtons;
+    }
+
+
 
 }

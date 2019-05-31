@@ -8,8 +8,11 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.kuba.onefromten.Fragments.ThreeMenGame;
 import com.example.kuba.onefromten.Question;
 import com.example.kuba.onefromten.Utilities.ArtificialIntelligence;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -25,18 +28,28 @@ public class ThreeMenGameController extends GameController {
     private ArtificialIntelligence[] ais;
     private Button[] answerButtons, playersButtons;
     private boolean pointing;
+    private TextView[][] playersTextViews;
+    private TextView narrator;
+    private String narratorText;
 
 
-    public ThreeMenGameController(Context context, ArrayList<Question> questions, Button[] answerButtons, Button[] playersButtons, TextView questionTextView, LinearLayout gameOverLinearLayout, Activity myActivity){
+
+    public ThreeMenGameController(Context context, ArrayList<Question> questions, Button[] answerButtons, Button[] playersButtons,
+                                  TextView questionTextView, LinearLayout gameOverLinearLayout, Activity myActivity, TextView[][] playersTextViews, TextView timer, TextView narrator){
 
         this.myActivity = myActivity;
         this.gameOverLinearLayout = gameOverLinearLayout;
         this.questionTextView = questionTextView;
         this.answerButtons = answerButtons;
-        initializeVariables(context, questions, answerButtons, 1500, 300, 10, 700, myActivity);
+        this.playersTextViews = playersTextViews;
+        this.timer = timer;
+        this.narrator = narrator;
 
+        initializeVariables(context, questions, answerButtons, 1500, 300, 10, 700, myActivity);
         myTurn = true;
         myName = "Jakub";
+
+
         currentPlayer = myName;
         pointing = false;
 
@@ -54,7 +67,9 @@ public class ThreeMenGameController extends GameController {
 
         ais = new ArtificialIntelligence[2];
         for(int i = 0; i<2; i++){
-            ais[i] = new ArtificialIntelligence(playersList.get(i), ArtificialIntelligence.Difficulty.HARD, playersList);
+            TextView[] textView = new TextView[3];
+            textView = playersTextViews[i];
+            ais[i] = new ArtificialIntelligence(playersList.get(i), ArtificialIntelligence.Difficulty.HARD, playersList, myActivity, textView);
             ais[i].start();
         }
 
@@ -66,54 +81,71 @@ public class ThreeMenGameController extends GameController {
 
 
     public void run(){
-        //Log.v("womtek", "zaczynam " + String.valueOf(isGameOver));
         try {
             while (!isGameOver()) {
-                Log.v("Jestemtu", "1");
+
+                Log.v("ajajajaj ", "1");
+                if(lastQuestion) {
+                    setGameOver(true);
+                    for (ArtificialIntelligence ai : ais)
+                        ai.isLastQuestion(true);
+                }
+                Log.v("ajajajaj ", "2");
                 if (currentPlayer.equals("Jakub"))
                     myTurn = true;
                 clearText(questionTextView);
 
+                narratorText = "Pytanie " + (numberOfCurrentQuestion+1) + "/" + questions.size();
+                changeNarratorText(narratorText);
+
                 showQuestion(questionTextView);
+
+                Log.v("ajajajaj ", "3");
 
                 showAnswers();
 
+                setButtonsClickable(true, true);
 
                 for (ArtificialIntelligence ai : ais) {
-
                     ai.setCurrentQuestion(getCurrentQuestion());
-                    ai.setCanAnswer(true);
-
-                    //Log.v("Jestemtu", "na imie mi " + ai.getAiName());
-                    if (currentPlayer.equals(ai.getAiName())) {
-
+                    if (currentPlayer.equals(ai.getAiName()))
                         ai.setMyTurn(true);
-                       // Log.v("Jestemtu", "drugie setnal");
-                    }
+                    ai.setCanAnswer(true);
                 }
 
+                narratorText = "Odpowiada " + currentPlayer;
+                changeNarratorText(narratorText);
+
+                Log.v("ajajajaj ", "4");
                 if (myTurn) {
+                    Log.v("ajajajaj ", "4a");
                     waitForAnswer();
-                    Log.v("Jestemtu", "3");
                 }
                 else
                     waitForAiAnswer();
-
-                highlightAnsweredButton();
-
+                Log.v("ajajajaj ", "5");
+                if(myTurn || clickedWhileNotMyTurn)
+                    highlightAnsweredButton();
+                Log.v("ajajajaj ", "6");
                 if (!isAnswerCorrect(getAnswer())) {
                     if (myTurn)
                         setGameOver(true);
+                    Log.v("ajajajaj ", "7a");
                 }
                 else {
-                    if(myTurn) {
-                        Log.v("Jestemtu", "4");
-                        pointing = true;
-                        pointAt();
+                    Log.v("ajajajaj ", "7b");
+                    if (!lastQuestion) {
+                        if (myTurn) {
+                            narratorText = "Wskazuje " + currentPlayer;
+                            changeNarratorText(narratorText);
+                            pointing = true;
+                            pointAt();
+                            Thread.sleep(1500);
+                        }
+                        setNextQuestion();
                     }
-                    setNextQuestion();
-                    Log.v("Jestemtu", "5");
                 }
+
 
             }
 
@@ -126,7 +158,7 @@ public class ThreeMenGameController extends GameController {
         } catch (Exception e){}
 
     }
-    
+
 
     private void pointAt(){
         try {
@@ -136,7 +168,6 @@ public class ThreeMenGameController extends GameController {
             }
 
             while (pointing) {
-                Log.v("Jestemtu", "pointing");
                 Thread.sleep(200);
             }
         } catch (InterruptedException e){}
@@ -144,77 +175,86 @@ public class ThreeMenGameController extends GameController {
 
     public void pointedAt(int player){
         pointing = false;
+        narratorText = "Gracz " + currentPlayer + " wskazał gracza " + playersButtons[player].getText().toString();
+        changeNarratorText(narratorText);
         currentPlayer = playersButtons[player].getText().toString();
         if(!currentPlayer.equals(myName))
             myTurn = false;
-        Log.v("Jestemtu", "current player: " + currentPlayer);
-
     }
 
 
-    /* to jest w miare git*/
+
     public void waitForAiAnswer(){
-        Log.v("-----jestemai", " wszedlem waitForAiAnswer ");
-        //Log.v("-----jestemai", currentPlayer + " " + ais[0].getAiName());
-        if (currentPlayer.equals(ais[0].getAiName())){
-            Log.v("-----jestemai", " curent " + currentPlayer);
-            for(int i=0; i<4; i++){
-                answerButtons[i].setClickable(true);
-            }
-            while(ais[0].getCanAnswer()){
-                //nothing, just wait
-            }
-            //zablokowac przyciski
-            for(int i=0; i<4; i++){
-                answerButtons[i].setClickable(false);
-            }
-            while(ais[0].isPointing()){
-                //nothing, just wait
-            }
+        try {
+            if (currentPlayer.equals(ais[0].getAiName())) {
+                for (int i = 0; i < 4; i++) {
+                    answerButtons[i].setClickable(true);
+                }
+                while (ais[0].getCanAnswer()) {
+                    //nothing, just wait
+                    Log.v("ajajajaj ", "cananswer");
+                }
+                //zablokowac przyciski
+                if (!myTurn && !clickedWhileNotMyTurn)
+                    setButtonsClickable(false, true);
 
-            // tutaj bedzie trzeba zmienic zeby wybieralo losowo playera albo kolejnego czy cos
-            if (ais[0].getPointedAt()!=null) {
-                currentPlayer = ais[0].getPointedAt();
-               // if(currentPlayer.equals("Zbyszek"))
-               //     ais[1].setMyTurn(true);
-                Log.v("-----jestemai", " cos tu jest nie tak 1 " + currentPlayer);
-            }
-            else {
-                currentPlayer = "Jakub";
-                //ais[0].setMyTurn(false);
-                Log.v("-----jestemai " , " teraz ruch Jakuba");
-                Log.v("-----jestemai", " cos tu jest nie tak 1 " + currentPlayer);
-            }
+                boolean doItOnce = true;
+                while (ais[0].isPointing()) {
+                    //nothing, just wait
+                    if(doItOnce){
+                        narratorText = "Wskazuje " + currentPlayer ;
+                        changeNarratorText(narratorText);
+                        doItOnce = false;
+                    }
+                    Log.v("ajajajaj ", "is pointing");
+                }
+                Thread.sleep(300);
+                Log.v("ajajajaj ", "getPointedAt " + ais[0].getPointedAt());
+                if (ais[0].getPointedAt() != null) {
+                    if(!doItOnce){
+                        narratorText = "Gracz " + currentPlayer + " wskazał gracza " + ais[0].getPointedAt();
+                        changeNarratorText(narratorText);
+                        Thread.sleep(1500);
+                    }
+                    currentPlayer = ais[0].getPointedAt();
+                } else {
+                    currentPlayer = "Jakub";
+
+                }
 
 
-        }else if(currentPlayer.equals(ais[1].getAiName())) {
-            Log.v("-----jestemai", " curent " + currentPlayer);
-            for(int i=0; i<4; i++){
-                answerButtons[i].setClickable(true);
-            }
-            while(ais[1].getCanAnswer()){
-                //nothing, just wait
-            }
-            //zablokowac przyciski
-            for(int i=0; i<4; i++){
-                answerButtons[i].setClickable(false);
-            }
-            while(ais[1].isPointing()){
-                //nothing, just wait
-            }
-            //Log.v("-----jestemai", " przed " + currentPlayer);
-            if (ais[1].getPointedAt()!=null) {
-                currentPlayer = ais[1].getPointedAt();
-                //if(currentPlayer.equals("Kasia"))
-                //    ais[0].setMyTurn(true);
-            }
-            else {
-                //ais[1].setMyTurn(false);
-                currentPlayer = "Jakub";
-                Log.v("-----jestemai " , " teraz ruch Jakuba");
-            }
+            } else if (currentPlayer.equals(ais[1].getAiName())) {
+                for (int i = 0; i < 4; i++) {
+                    answerButtons[i].setClickable(true);
+                }
+                while (ais[1].getCanAnswer()) {
+                    //nothing, just wait
+                }
+                //zablokowac przyciski
+                if (!myTurn && !clickedWhileNotMyTurn)
+                    setButtonsClickable(false, true);
+                boolean doItOnce = true;
+                while (ais[1].isPointing()) {
+                    //nothing, just wait
+                    if(doItOnce){
+                        narratorText = "Wskazuje " + currentPlayer ;
+                        changeNarratorText(narratorText);
+                        doItOnce = false;
+                    }
+                }
+                Thread.sleep(300);
+                Log.v("ajajajaj ", "getPointedAt " + ais[1].getPointedAt());
+                if (ais[1].getPointedAt() != null) {
+                    narratorText = "Gracz " + currentPlayer + " wskazał gracza " + ais[1].getPointedAt();
+                    changeNarratorText(narratorText);
+                    Thread.sleep(1500);
+                    currentPlayer = ais[1].getPointedAt();
+                } else {
+                    currentPlayer = "Jakub";
+                }
 
-        }
+            }
+        }catch (Exception e){}
     }
 
 
@@ -224,6 +264,46 @@ public class ThreeMenGameController extends GameController {
 
 
 
+    private void changeText(final TextView textView, final String text){
+        myActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(text);
+            }
+        });
+    }
+
+    private void changeNarratorText(final String text){
+        myActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                narrator.setText(text);
+            }
+        });
+    }
+
+    public ArrayList<String> getPlayersList(){
+        return playersList;
+    }
+
+
+    public TextView[] getPlayersTextViews(String playerName){
+        TextView[] textView = new TextView[playersList.size()];
+        int playerNumber=0;
+        for(String player : playersList){
+            if(!playerName.equals(player))
+                playerNumber++;
+        }
+        for(int i=0; i<3; i++){
+            textView[i] = playersTextViews[playerNumber][i];
+        }
+
+        return textView;
+    }
+
+    public boolean isMyTurn(){
+        return myTurn;
+    }
 
 
 

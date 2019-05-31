@@ -17,18 +17,19 @@ public class SoloGameController extends GameController {
     private Activity myActivity;
     private LinearLayout gameOverLinearLayout;
 
-    public SoloGameController(Context context, ArrayList<Question> questions, Button[] answerButtons, TextView questionTextView, LinearLayout gameOverLinearLayout,  Activity myActivity){
+    public SoloGameController(Context context, ArrayList<Question> questions, Button[] answerButtons, TextView questionTextView, LinearLayout gameOverLinearLayout,  Activity myActivity, TextView timer){
 
         this.myActivity = myActivity;
         this.gameOverLinearLayout = gameOverLinearLayout;
         this.questionTextView = questionTextView;
+        this.timer = timer;
         initializeVariables(context, questions, answerButtons, 1500, 300, 10, 700, myActivity);
 
     }
 
 
+
     public void run(){
-        //Log.v("womtek", "zaczynam " + String.valueOf(isGameOver));
 
         while(!isGameOver()) {
 
